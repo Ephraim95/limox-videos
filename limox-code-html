@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Limox Quiz On-Demand Videos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #002F6C; /* Deep Blue */
+      --accent-color: #FFA500;  /* Bright Orange */
+      --bg-gradient: linear-gradient(135deg, #002F6C, #FFA500);
+      --card-bg: #ffffff;
+      --text-color: #333333;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-color);
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    #main-player-container {
+      max-width: 960px;
+      margin: 2rem auto;
+      background-color: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      padding-bottom: 56.25%;
+      position: relative;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+
+    #player {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--card-bg);
+      margin: 2rem 0 1rem;
+    }
+
+    .video-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto 3rem;
+      padding: 0 1rem;
+    }
+
+    .video-item {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .video-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .video-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+
+    .video-item p {
+      padding: 10px;
+      margin: 0;
+      font-weight: 600;
+      text-align: center;
+      color: var(--primary-color);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #ffffff;
+      background-color: var(--primary-color);
+    }
+
+    @media (max-width: 600px) {
+      .video-item img {
+        height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Limox Quiz On-Demand</h1>
+  </header>
+
+  <div id="main-player-container">
+    <div id="player"></div>
+  </div>
+
+  <h2>Recent Contests</h2>
+  <div class="video-list" id="videoList">
+    <!-- Thumbnails will load here -->
+  </div>
+
+  <footer>Powered by Fish TV Ghana</footer>
+
+  <script>
+    // Load YouTube Player API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.body.appendChild(tag);
+
+    let player;
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '100%',
+        width: '100%',
+        videoId: '', // will set later
+        playerVars: {
+          autoplay: 1,
+          controls: 1,
+          modestbranding: 1,
+          rel: 0
+        }
+      });
+
+      loadVideos();
+    }
+
+    function loadNewVideo(videoId) {
+      if (player && videoId) {
+        player.loadVideoById(videoId);
+        document.getElementById('main-player-container').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function loadVideos() {
+      fetch('https://raw.githubusercontent.com/Ephraim95/limox-videos/main/videos.json')
+        .then(res => res.json())
+        .then(videos => {
+          const list = document.getElementById('videoList');
+          videos.forEach((video, index) => {
+            const item = document.createElement('div');
+            item.className = 'video-item';
+            item.innerHTML = `
+              <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="${video.title}">
+              <p>${video.title}</p>
+            `;
+            item.onclick = () => loadNewVideo(video.id);
+            list.appendChild(item);
+
+            if (index === 0) {
+              const waitUntilReady = setInterval(() => {
+                if (player && typeof player.loadVideoById === 'function') {
+                  player.loadVideoById(video.id);
+                  clearInterval(waitUntilReady);
+                }
+              }, 100);
+            }
+          });
+        })
+        .catch(err => {
+          console.error('Failed to load video list:', err);
+        });
+    }
+  </script>
+</body>
+</html>
