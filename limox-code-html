@@ -1,117 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Limox Quiz On-Demand Videos</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Limox Quiz Videos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --primary-color: #002F6C; /* Deep Blue */
-      --accent-color: #FFA500;  /* Bright Orange */
-      --bg-gradient: linear-gradient(135deg, #002F6C, #FFA500);
-      --card-bg: #ffffff;
-      --text-color: #333333;
+      --primary-color: #17335B;
+      --accent-color: #FFCA28;
+      --bg-color: #F4F8FC;
+      --text-color: #333;
     }
 
     body {
-      margin: 0;
-      padding: 0;
       font-family: 'Inter', sans-serif;
-      background: var(--bg-gradient);
+      margin: 0;
+      background: linear-gradient(to bottom right, var(--bg-color), #E3EEFC);
       color: var(--text-color);
+      padding-top: 80px;
     }
 
     header {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 1.5rem 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+      padding: 20px;
       text-align: center;
     }
 
     header h1 {
       margin: 0;
-      font-size: 2rem;
+      font-size: 1.9em;
+      color: var(--primary-color);
     }
 
     #main-player-container {
-      max-width: 960px;
-      margin: 2rem auto;
-      background-color: #000;
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      max-width: 900px;
+      margin: 0 auto 30px;
       border-radius: 12px;
       overflow: hidden;
-      padding-bottom: 56.25%;
-      position: relative;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      background: #000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     }
 
     #player {
       position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
     }
 
     h2 {
       text-align: center;
-      color: var(--card-bg);
-      margin: 2rem 0 1rem;
+      color: var(--primary-color);
+      font-size: 1.5em;
+      margin-top: 30px;
     }
 
     .video-list {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 20px;
       max-width: 1200px;
-      margin: 0 auto 3rem;
-      padding: 0 1rem;
+      margin: 20px auto;
+      padding: 0 20px;
     }
 
     .video-item {
-      background-color: var(--card-bg);
+      background: #fff;
       border-radius: 10px;
-      overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
       cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
+      overflow: hidden;
     }
 
     .video-item:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
 
     .video-item img {
       width: 100%;
-      height: 150px;
+      height: 140px;
       object-fit: cover;
     }
 
     .video-item p {
-      padding: 10px;
-      margin: 0;
-      font-weight: 600;
+      margin: 10px;
       text-align: center;
       color: var(--primary-color);
+      font-weight: 600;
     }
 
     footer {
       text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-      color: #ffffff;
-      background-color: var(--primary-color);
+      padding: 25px 10px;
+      background-color: #17335B;
+      color: white;
+      font-size: 0.95em;
+      margin-top: 50px;
     }
 
-    @media (max-width: 600px) {
+    footer a {
+      color: var(--accent-color);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.5em;
+      }
+
+      .video-list {
+        grid-template-columns: 1fr;
+      }
+
       .video-item img {
-        height: 100px;
+        height: 180px;
       }
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -122,73 +140,68 @@
     <div id="player"></div>
   </div>
 
-  <h2>Recent Contests</h2>
-  <div class="video-list" id="videoList">
-    <!-- Thumbnails will load here -->
-  </div>
+  <h2>More Episodes</h2>
+  <div class="video-list" id="video-list"></div>
 
-  <footer>Powered by Fish TV Ghana</footer>
+  <footer>
+    Powered by <a href="https://localstreamgh.com" target="_blank">Local Stream Ghana</a>
+  </footer>
 
   <script>
-    // Load YouTube Player API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
-    document.body.appendChild(tag);
+    document.head.appendChild(tag);
 
     let player;
+    let firstVideoId = null;
 
     function onYouTubeIframeAPIReady() {
-      player = new YT.Player('player', {
-        height: '100%',
-        width: '100%',
-        videoId: '', // will set later
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          modestbranding: 1,
-          rel: 0
-        }
-      });
-
-      loadVideos();
+      if (firstVideoId) {
+        player = new YT.Player('player', {
+          videoId: firstVideoId,
+          playerVars: {
+            autoplay: 1,
+            controls: 1,
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1
+          }
+        });
+      }
     }
 
-    function loadNewVideo(videoId) {
-      if (player && videoId) {
-        player.loadVideoById(videoId);
+    function loadVideo(id) {
+      if (player) {
+        player.loadVideoById(id);
         document.getElementById('main-player-container').scrollIntoView({ behavior: 'smooth' });
       }
     }
 
-    function loadVideos() {
-      fetch('https://raw.githubusercontent.com/Ephraim95/limox-videos/main/videos.json')
-        .then(res => res.json())
-        .then(videos => {
-          const list = document.getElementById('videoList');
-          videos.forEach((video, index) => {
-            const item = document.createElement('div');
-            item.className = 'video-item';
-            item.innerHTML = `
-              <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="${video.title}">
-              <p>${video.title}</p>
-            `;
-            item.onclick = () => loadNewVideo(video.id);
-            list.appendChild(item);
+    fetch('https://raw.githubusercontent.com/Ephraim95/limox-videos/main/videos.json')
+      .then(res => res.json())
+      .then(videos => {
+        const container = document.getElementById('video-list');
+        videos.forEach((video, i) => {
+          if (i === 0) firstVideoId = video.id;
 
-            if (index === 0) {
-              const waitUntilReady = setInterval(() => {
-                if (player && typeof player.loadVideoById === 'function') {
-                  player.loadVideoById(video.id);
-                  clearInterval(waitUntilReady);
-                }
-              }, 100);
-            }
-          });
-        })
-        .catch(err => {
-          console.error('Failed to load video list:', err);
+          const item = document.createElement('div');
+          item.className = 'video-item';
+          item.innerHTML = `
+            <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="${video.title}">
+            <p>${video.title}</p>
+          `;
+          item.onclick = () => loadVideo(video.id);
+          container.appendChild(item);
         });
-    }
+
+        if (window.YT && YT.Player) {
+          onYouTubeIframeAPIReady();
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load video list:", err);
+      });
   </script>
+
 </body>
 </html>
